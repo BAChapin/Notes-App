@@ -13,24 +13,43 @@ struct Home: View {
     @State var shouldAdd = false
     @State var showAlert = false
     @State var deleteItem: Note?
+    @State var isEditMode: EditMode = .inactive
+    @State var updateNote: String = ""
+    @State var updateNoteId: String = ""
     
     var body: some View {
         NavigationView {
             List(notes) { note in
-                Text(note.note)
-                    .onLongPressGesture(perform: {
-                        showAlert.toggle()
-                        deleteItem = note
-                    })
-                    .padding()
+                if isEditMode == .inactive {
+                    Text(note.note)
+                        .onLongPressGesture(perform: {
+                            showAlert.toggle()
+                            deleteItem = note
+                        })
+                        .padding()
+                } else {
+                    HStack {
+                        Image(systemName: "pencil.circle.fill")
+                            .foregroundColor(.yellow)
+                        
+                        Text(note.note)
+                            .padding()
+                    }
+                    .onTapGesture {
+                        updateNote = note.note
+                        updateNoteId = note.id
+                        shouldAdd.toggle()
+                    }
+                }
             }
             .sheet(isPresented: $shouldAdd, onDismiss: {
                 fetchNotes()
             }, content: {
-                AddNoteView()
-            })
-            .sheet(isPresented: $shouldAdd, content: {
-                AddNoteView()
+                if isEditMode == .active {
+                    UpdateNoteView(text: $updateNote, noteId: $updateNoteId)
+                } else {
+                    AddNoteView()
+                }
             })
             .alert(isPresented: $showAlert, content: {
                 alert
@@ -40,6 +59,19 @@ struct Home: View {
                 shouldAdd.toggle()
             }, label: {
                 Text("Add")
+            }))
+            .navigationBarItems(leading: Button(action: {
+                if isEditMode == .inactive {
+                    isEditMode = .active
+                } else {
+                    isEditMode = .inactive
+                }
+            }, label: {
+                if isEditMode == .inactive {
+                    Text("Edit")
+                } else {
+                    Text("Done")
+                }
             }))
         }
         .onAppear {
@@ -69,6 +101,10 @@ struct Home: View {
         }
         
         task.resume()
+        
+        if isEditMode == .active {
+            isEditMode = .inactive
+        }
     }
     
     private func deleteNote() {
