@@ -10,6 +10,7 @@ import SwiftUI
 struct Home: View {
     
     @State var notes: [Note] = []
+    @State var shouldAdd = false
     
     var body: some View {
         NavigationView {
@@ -17,9 +18,12 @@ struct Home: View {
                 Text(note.note)
                     .padding()
             }
+            .sheet(isPresented: $shouldAdd, content: {
+                AddNoteView()
+            })
             .navigationTitle("Notes")
             .navigationBarItems(trailing: Button(action: {
-                print("Add a note")
+                shouldAdd.toggle()
             }, label: {
                 Text("Add")
             }))
