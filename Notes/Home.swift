@@ -8,10 +8,13 @@
 import SwiftUI
 
 struct Home: View {
+    
+    @State var notes: [Note] = []
+    
     var body: some View {
         NavigationView {
-            List(0..<10) { i in
-                Text("We are at \(i)")
+            List(notes) { note in
+                Text(note.note)
                     .padding()
             }
             .navigationTitle("Notes")
@@ -32,7 +35,12 @@ struct Home: View {
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else { return }
             
-            print(String(data: data, encoding: .utf8))
+            do {
+                let notes = try JSONDecoder().decode([Note].self, from: data)
+                self.notes = notes
+            } catch {
+                print(error)
+            }
         }
         
         task.resume()
